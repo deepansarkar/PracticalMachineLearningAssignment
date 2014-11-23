@@ -1,0 +1,56 @@
+---
+title: "Human Activity Recognition"
+author: "Deepan Sarkar"
+date: "Sunday, November 23, 2014"
+output: html_document
+---
+
+## Load the data set and pre-process the data
+  
+### Loading the data set
+```{r, echo=TRUE, cache=TRUE}
+library( caret )
+library( randomForest )
+train <- read.csv( "E:/COURSES/DATA SCIENCE/8 Practical Machine Learning/Assignment/pml-training.csv" )
+test <- read.csv( "E:/COURSES/DATA SCIENCE/8 Practical Machine Learning/Assignment/pml-testing.csv" )
+```
+  
+### Pre-processing the data set
+Here I have considered only 52 variables as the predictor variables. All these variables have no missing data values.  
+The train data has been further divided into training data set and testing data set by random 75%-25% split. This is done to validate whether the generated model is accurate enough to be used on the test data set.
+```{r, echo=TRUE, cache=TRUE}
+Y <- "classe"
+Xs <- c( "roll_belt", "pitch_belt", "yaw_belt", "total_accel_belt", "gyros_belt_x", "gyros_belt_y", "gyros_belt_z", "accel_belt_x", "accel_belt_y", "accel_belt_z", "magnet_belt_x", "magnet_belt_y", "magnet_belt_z", "roll_arm", "pitch_arm", "yaw_arm", "total_accel_arm", "gyros_arm_x", "gyros_arm_y", "gyros_arm_z", "accel_arm_x", "accel_arm_y", "accel_arm_z", "magnet_arm_x", "magnet_arm_y", "magnet_arm_z", "roll_dumbbell", "pitch_dumbbell", "yaw_dumbbell", "total_accel_dumbbell", "gyros_dumbbell_x", "gyros_dumbbell_y", "gyros_dumbbell_z", "accel_dumbbell_x", "accel_dumbbell_y", "accel_dumbbell_z", "magnet_dumbbell_x", "magnet_dumbbell_y", "magnet_dumbbell_z", "roll_forearm", "pitch_forearm", "yaw_forearm", "total_accel_forearm", "gyros_forearm_x", "gyros_forearm_y", "gyros_forearm_z", "accel_forearm_x", "accel_forearm_y", "accel_forearm_z", "magnet_forearm_x", "magnet_forearm_y", "magnet_forearm_z" )
+set.seed(12345)
+inTrain <- createDataPartition( y=train$classe, p=0.75, list=FALSE )
+training <- train[inTrain,c(Xs,Y)]
+testing <- train[-inTrain,c(Xs,Y)]
+```
+
+## Generate model from the data
+  
+### The model
+The training data set is used to build a random forest model.
+```{r, echo=TRUE, cache=TRUE}
+fit<-randomForest(classe~.,training)
+predTrain <- predict( fit, training )
+confTrain <- confusionMatrix( predTrain, training$classe )
+```
+The out of sample error is expected to be around `r (1-confTrain$overall[1])*100`%.
+  
+### The accuracy
+The prediction accuracy on the testing data set is shown below.
+```{r, echo=TRUE, cache=TRUE}
+predTest <- predict( fit, testing )
+confTest <- confusionMatrix( predTest, testing$classe )
+```
+The out of sample error is found to be around `r (1-confTest$overall[1])*100`%.
+
+### The predictions
+The predictions on the test data set is given below.
+```{r, echo=TRUE, cache=TRUE}
+predict( fit, test )
+```
+
+## Citation
+The data is obtained from Human Activity Recognition data set at the url: http://groupware.les.inf.puc-rio.br/har.
